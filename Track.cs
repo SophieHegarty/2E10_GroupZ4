@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 public class Track
 {
@@ -66,6 +66,29 @@ public class Track
         }
         return -1;
     }
+    public void setGantryForBuggy(int buggyIndex, int gantryIndex)
+    {
+        if (buggyIndex < 0 || buggyIndex >= 2 ||
+            gantryIndex < 0 || gantryIndex >= 3)
+        {
+            return;
+        }
+        int oldGantryIndex = getGantryForBuggy(buggyIndex);
+        int oldSectionIndex = getSectionForBuggy(buggyIndex);
+        if (oldGantryIndex != -1)
+        {
+            gantries[oldGantryIndex].state = GantryState.Empty;
+            gantries[oldGantryIndex].buggy = -1;
+        }
+        if (oldSectionIndex!= -1)
+        {
+            sections[oldSectionIndex].state = SectionState.Empty;
+            sections[oldSectionIndex].buggy = -1;
+        }
+
+        gantries[gantryIndex].state = GantryState.Occupied;
+        gantries[gantryIndex].buggy = buggyIndex;
+    }
 
     public bool isSectionEmpty(int index)
     {
@@ -99,4 +122,39 @@ public class Track
         }
         return -1;
     }
+    public void setSectionForBuggy(int buggyIndex, int sectionIndex)
+    {
+        if (buggyIndex < 0 || buggyIndex >= 2 ||
+            sectionIndex < 0 || sectionIndex >= 4)
+        {
+            return;
+        }
+        int oldGantryIndex = getGantryForBuggy(buggyIndex);
+        int oldSectionIndex = getSectionForBuggy(buggyIndex);
+        if (oldGantryIndex != -1)
+        {
+            gantries[oldGantryIndex].state = GantryState.Empty;
+            gantries[oldGantryIndex].buggy = -1;
+        }
+        if (oldSectionIndex != -1)
+        {
+            sections[oldSectionIndex].state = SectionState.Empty;
+            sections[oldSectionIndex].buggy = -1;
+        }
+
+        sections[sectionIndex].state = SectionState.Occupied;
+        sections[sectionIndex].buggy = buggyIndex;
+    }
+    public String getMap()
+    {
+        String map = "                     \n"
+                   + " .--------A--------. \n"
+                   + " |                 | \n"
+                   + " B                 C \n"
+                   + " |  .-----D-----.  | \n"
+                   + " | /             \\ | \n"
+                   + " .---E----F----G---. \n"
+                   + "                     \n"; 
+
+    } 
 }
