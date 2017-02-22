@@ -79,8 +79,6 @@ void loop() {
     message = "";
     messageComplete = false;
   }
-
-  
 }
 
 void buggycontrol(int mode){
@@ -88,6 +86,19 @@ void buggycontrol(int mode){
     delay(mode); //Pulse length
     digitalWrite(Control_Pin, LOW);
     delay(20); //Avoid sending too closly packed pulses
+}
+
+void serialEvent(){
+  while (Serial.available()) {
+    if (messageComplete) continue;
+    
+    char c = Serial.read();
+    if (c != '\n')  {
+      message += c;
+    }else{
+      messageComplete = true;
+    }
+  }
 }
 
 void send(String message) {
