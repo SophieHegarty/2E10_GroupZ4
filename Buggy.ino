@@ -18,6 +18,8 @@
 
 //Debugging:
 #define XBee true
+#define DEBUGIR false
+#define DEBUGUS true
 #define DEBUG false
 //XBee controls communication via XBee or cable
 //DEBUG controls verbose output
@@ -77,12 +79,48 @@ void loop() {
   if (messageComplete) {
     message.toLowerCase();
     
-     if (message == "run") {
-     buggycontrol(Buggy_FollowLine);
+    if (message == "run") {
+      buggycontrol(Buggy_FollowLine);
       send("Buggy Running");
     }else if (message == "stop") {
-     buggycontrol(Buggy_Stop);
+      buggycontrol(Buggy_Stop);
       send("Buggy Stopping");
+    }else if(message == "leave gantry"){
+      ignoreIR = true;
+      
+      buggycontrol(Buggy_FollowLine);
+      delay(1000);
+  
+      if (DEBUGIR) {
+        send("Passed gantry");
+      }
+      
+      ignoreIR = false;
+      
+    }else if (message == "park right") {
+      ignoreIR = true;
+      
+      buggycontrol(Buggy_TurnRight);
+      delay(3000);
+      buggycontrol(Buggy_FollowLine);
+      delay(3000);
+      buggycontrol(Buggy_Stop);
+      
+      ignoreIR = false;
+      
+      send("Buggy Parked");
+    }else if (message == "park left") {
+      ignoreIR = true;
+      
+      buggycontrol(Buggy_TurnLeft);
+      delay(3000);
+      buggycontrol(Buggy_FollowLine);
+      delay(3000);
+      buggycontrol(Buggy_Stop);
+      
+      ignoreIR = false;
+      
+      send("Buggy Parked");
     }else if (message == "turn right") {
      buggycontrol(Buggy_TurnRight);
       send("Buggy Turning Right");
@@ -116,19 +154,10 @@ void loop() {
   
   if(gantryChange == true){
     gantryChange = false;
-    
+     buggycontrol(Buggy_Stop);
     send("Detected Gantry " + String(gantry));
     
-    ignoreIR = true;
     
-    buggycontrol(Buggy_FollowLine);
-    delay(1000);
-
-    if (DEBUG) {
-      send("Passed gantry");
-    }
-    
-    ignoreIR = false;
   }
 
   unsigned long t = millis();
@@ -137,21 +166,21 @@ void loop() {
     lastUSCheck = t;
 
     if (hasObstacle()) {
+      
+        send("Obstacle detected");
       if (!obstacle) {
         obstacle = true;
         
-        buggycontrol(Buggy_Stop);
-        
-        send("Obstacle detected");
+       buggycontrol(Buggy_Stop);
       }
-      
+     
     }else{
+
+        send("Obstacle gone");
       if (obstacle) {
         obstacle = false;
         
-        buggycontrol(Buggy_FollowLine);
-        
-        send("Obstacle gone");
+       buggycontrol(Buggy_FollowLine);
       }
     }
   }
@@ -189,34 +218,32 @@ bool hasObstacle() {
 
   int dt = pulseIn(UltraSonic_Signal_Pin, HIGH);
   
-  if (DEBUG) {
+  if (DEBUGUS) {
     send("US Pulse length: " + String(dt));
   }
   
   //Process pulse length:
   int s = distanceForPulseLength(dt);
   
-  return s <= 50;
+  return s <= 100;
 }
-
-//Interrupt handlers:
 
 //Interrupt handler for IR sensors
 void IRDetected(){
-  if(ignoreIR){
-    if (DEBUG) {
+  if(ignoreIR || gantryChange){
+    if (DEBUGIR) {
       send("IR ignored");
     }
     
     return;
   }
   
-  buggycontrol(Buggy_Stop);
+ 
   
   while(digitalRead(InfraRed_Pin) != LOW){};
   int t = pulseIn(InfraRed_Pin, HIGH);
 
-  if (DEBUG) {
+  if (DEBUGIR) {
     send("IR Pulse length: " + String(t));
   }
   
@@ -235,8 +262,8 @@ int gantryForPulseLength(int t){
   }else if(t >=2500 && t < 3500){
     return 3;
   }else{
-    if (DEBUG) {
-      send("Invalid IR pulse length");
+    if (DEBUGIR) {
+      send("Invalid pulse length");
     }
     
     return 0;
@@ -259,3 +286,4 @@ void buggycontrol(int  mode){
   digitalWrite(Control_Pin, LOW);
   delay(20); //Avoid sending too closly packed pulses
 }
+
