@@ -16,13 +16,21 @@
 #define Buggy_FullPower 18
 //Sent to buggycontrol(int) to control the buggy
 
-//Debugging:
-#define XBee true
-#define DEBUGIR false
-#define DEBUGUS true
-#define DEBUG false
+//Hardware:
+#define XBee false
+#define Motors false
 //XBee controls communication via XBee or cable
-//DEBUG controls verbose output
+//Motors coontrols whether pulses are sent to the control pin
+//Tip: Turn this off when not working with the buggy!
+//     It interferes with the US obstacle detection.
+
+//Debugging:
+#define DEBUG false
+#define DEBUGIR false
+#define DEBUGUS false
+//DEBUG controls verbose output of general messages
+//DEBUGIR controls verbose output of Infra Red related messages
+//DEBUGUS controls verbose output of Ultra Sonic related messages
 
 //States:
 String message;
@@ -75,7 +83,7 @@ void setup() {
   }
 }
 
-void loop() {
+void loop() {  
   if (messageComplete) {
     message.toLowerCase();
     
@@ -154,33 +162,33 @@ void loop() {
   
   if(gantryChange == true){
     gantryChange = false;
-     buggycontrol(Buggy_Stop);
+    
+    buggycontrol(Buggy_Stop);
+     
     send("Detected Gantry " + String(gantry));
-    
-    
   }
-
+  
   unsigned long t = millis();
-
+  
   if (t - lastUSCheck > USCheckInterval) {
     lastUSCheck = t;
-
+    
     if (hasObstacle()) {
-      
-        send("Obstacle detected");
       if (!obstacle) {
         obstacle = true;
         
-       buggycontrol(Buggy_Stop);
+        send("Obstacle detected");
+        
+        buggycontrol(Buggy_Stop);
       }
      
     }else{
-
-        send("Obstacle gone");
       if (obstacle) {
         obstacle = false;
         
-       buggycontrol(Buggy_FollowLine);
+        send("Obstacle gone");
+        
+        buggycontrol(Buggy_FollowLine);
       }
     }
   }
@@ -213,19 +221,25 @@ bool hasObstacle() {
 
   digitalWrite(UltraSonic_Signal_Pin, LOW);
 
+  delayMicroseconds(3);
+  
   //Receive pulse:
   pinMode(UltraSonic_Signal_Pin, INPUT);
-
-  int dt = pulseIn(UltraSonic_Signal_Pin, HIGH);
+  
+  int dt = pulseIn(UltraSonic_Signal_Pin, HIGH, 2000);
   
   if (DEBUGUS) {
     send("US Pulse length: " + String(dt));
   }
   
   //Process pulse length:
+  if (dt == 0) {
+    return false;
+  }
+  
   int s = distanceForPulseLength(dt);
   
-  return s <= 100;
+  return s <= 200;
 }
 
 //Interrupt handler for IR sensors
@@ -237,8 +251,6 @@ void IRDetected(){
     
     return;
   }
-  
- 
   
   while(digitalRead(InfraRed_Pin) != LOW){};
   int t = pulseIn(InfraRed_Pin, HIGH);
@@ -280,10 +292,11 @@ void buggycontrol(int  mode){
   if (DEBUG) {
     send("buggycontrol(" + String(mode) + ")");
   }
-  
-  digitalWrite(Control_Pin, HIGH);
-  delay(mode); //Pulse length
-  digitalWrite(Control_Pin, LOW);
-  delay(20); //Avoid sending too closly packed pulses
-}
 
+  if (Motors) {
+    digitalWrite(Control_Pin, HIGH);
+    delay(mode); //Pulse length
+    digitalWrite(Control_Pin, LOW);
+    delay(20); //Avoid sending too closly packed pulses
+  }
+}
