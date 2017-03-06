@@ -6,21 +6,23 @@ using System.Threading.Tasks;
 using System.IO.Ports;
 using System.Threading;
 
-namespace SerialComms
+namespace Buggy
 {
     class Program
     {
-        static const bool XBee = true;
+        const bool XBee = true;
 
         static List<String> archive = new List<String>();
         static SerialPort port;
         static Track track;
+        static int round;
 
         static void Main(string[] args)
         {
             track = new Track();
-            track.setOrientationForBuggy(0, BuggyOrientation.Clockwise);
-            track.setSectionForBuggy(0, 1);
+            track.setOrientationForBuggy(0, Track.BuggyOrientation.Clockwise);
+            track.setSectionForBuggy(0, 3);
+            round = 0;
 
             port = new SerialPort();
             port.PortName = "COM7";
@@ -53,7 +55,8 @@ namespace SerialComms
                         Console.WriteLine(archive[i]);
                     }
 
-                }else if(outmessage == "Start Bronze")
+                }
+                else if (outmessage == "Start Bronze")
                 {
                     send("Run");
                 }
@@ -68,35 +71,49 @@ namespace SerialComms
                                         SerialDataReceivedEventArgs e)
         {
             String inmessage = port.ReadLine();
+            Console.WriteLine(inmessage);
+            archive.Add(inmessage);
 
-            archive.add(inmessage);
-
-            if(inmessage == "Detected Gantry 1")
+            if(inmessage.StartsWith("Detected Gantry "))
             {
-                track.setGantryForBuggy(0, 0);
-                printTrack();
-                send("leave gantry");
-                track.setSectionForBuggy(0, track.getNextSectionForBuggy(0,false));
-                printTrack();
+                int gantry = Int32.Parse(inmessage.Substring(16));
 
-            }else if(inmessage == "Detected Gantry 2")
-            {
-                
-                track.setGantryForBuggy(0, 1);
-                printTrack();
+                if(gantry == 0)
+                {
+                    gantry = track.getNextGantryForBuggy(0, false);
+                }
+                gantry--;
+                if(gantry != track.getGantryForBuggy(0))
+                {
+                    if (gantry == 1)
+                    {
+                        round++;
+                    }
 
-                send("leave gantry");
-                track.setSectionForBuggy(0, track.getNextSectionForBuggy(0, false));
-                printTrack();
+                    track.setGantryForBuggy(0, gantry);
+                    printTrack();
+                    if (round < 2)
+                    {
+                        send("leave gantry");
+                        track.setSectionForBuggy(0, track.getNextSectionForBuggy(0, false));
+                        printTrack();
+                    }
+                    else
+                    {
+                        send("park right");
+                        track.setSectionForBuggy(0, track.getNextSectionForBuggy(0, true));
+                        printTrack();
+                    }
+
+                }
+
+
             }
-            else if(inmessage == "Detected Gantry 3")
+            else if(inmessage == "Buggy Parked")
             {
-
-                track.setGantryForBuggy(0, 2);
-                printTrack();
-                send("leave gantry");
-                track.setSectionForBuggy(0, track.getNextSectionForBuggy(0, false));
-                printTrack();
+                Console.WriteLine();
+                Console.WriteLine("Bronze Challenge Complete!");
+                Console.Write("> ");
             }
 
             Console.WriteLine();
