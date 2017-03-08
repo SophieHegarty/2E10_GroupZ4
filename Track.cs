@@ -2,11 +2,18 @@ using System;
 
 namespace Buggy
 {
+    
+    public enum BuggyOrientation { Clockwise, CounterClockwise };
+    public enum BuggyMovement { Stopped, 
+                                FollowingLine, 
+                                TurningRight, 
+                                TurningLeft, 
+                                Rotating };
+
     public class Track
     {
-        private enum GantryState { Empty, Occupied };
-        private enum SectionState { Empty, Occupied };
-        public enum BuggyOrientation { Clockwise, CounterClockwise };
+        private enum GantryState { Empty, Occupied, Blocked };
+        private enum SectionState { Empty, Occupied, Blocked };
 
         private struct Gantry
         {
@@ -23,7 +30,8 @@ namespace Buggy
         private struct Buggy
         {
             public BuggyOrientation orientation;
-
+            public BuggyMovement movement;
+            public double speed; //Between 0.0 and 1.0
         }
 
         private Gantry[] gantries;
@@ -47,8 +55,12 @@ namespace Buggy
             };
             buggies = new Buggy[]
             {
-                new Buggy() {orientation = BuggyOrientation.Clockwise },
-                new Buggy() {orientation = BuggyOrientation.Clockwise }
+                new Buggy() {orientation = BuggyOrientation.Clockwise, 
+                                movement = BuggyMovement.Stopped, 
+                                   speed = 0.5 },
+                new Buggy() {orientation = BuggyOrientation.Clockwise,
+                                movement = BuggyMovement.Stopped,
+                                   speed = 0.5 }
             };
         }
 
@@ -170,22 +182,65 @@ namespace Buggy
             sections[sectionIndex].buggy = buggyIndex;
         }
 
-        public BuggyOrientation getOrientationForBuggy(int index)
+        public BuggyOrientation getOrientationOfBuggy(int index)
         {
             if (index < 0 || index >= 2)
             {
                 return BuggyOrientation.Clockwise;
             }
+
             return buggies[index].orientation;
         }
 
-        public void setOrientationForBuggy(int index, BuggyOrientation orientation)
+        public void setOrientationOfBuggy(int index, BuggyOrientation orientation)
         {
             if (index < 0 || index >= 2)
             {
                 return;
             }
+
             buggies[index].orientation = orientation;
+        }
+
+        public BuggyMovement getMovementOfBuggy(int index)
+        {
+            if (index < 0 || index >= 2)
+            {
+                return BuggyMovement.Stopped;
+            }
+
+            return buggies[index].movement;
+        }
+
+        public void setMovementOfBuggy(int index, BuggyMovement movement)
+        {
+            if (index < 0 || index >= 2)
+            {
+                return;
+            }
+
+            buggies[index].movement = movement;
+        }
+
+        public double getSpeedOfBuggy(int index)
+        {
+            if (index < 0 || index >= 2)
+            {
+                return -1.0;
+            }
+
+            return buggies[index].speed;
+        }
+
+        public void setSpeedOfBuggy(int index, double speed)
+        {
+            if (index < 0 || index >= 2 ||
+                speed < 0.0 || speed > 1.0)
+            {
+                return;
+            }
+
+            buggies[index].speed = speed;
         }
 
         public int getNextSectionForBuggy(int index, bool parking)
@@ -194,7 +249,7 @@ namespace Buggy
             {
                 return -1;
             }
-            if (getOrientationForBuggy(index) == BuggyOrientation.Clockwise)
+            if (getOrientationOfBuggy(index) == BuggyOrientation.Clockwise)
             {
                 if (getSectionForBuggy(index) == 2 ||
                     getSectionForBuggy(index) == 3 ||
@@ -255,7 +310,7 @@ namespace Buggy
             {
                 return -1;
             }
-            if (getOrientationForBuggy(index) == BuggyOrientation.Clockwise)
+            if (getOrientationOfBuggy(index) == BuggyOrientation.Clockwise)
             {
                 if (getSectionForBuggy(index) == 2 ||
                     getSectionForBuggy(index) == 3 ||
