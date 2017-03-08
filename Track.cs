@@ -6,22 +6,26 @@ namespace Buggy
     {
         private enum GantryState { Empty, Occupied };
         private enum SectionState { Empty, Occupied };
-        private enum BuggyOrientation { Clockwise, CounterClockwise};
+        public enum BuggyOrientation { Clockwise, CounterClockwise };
+
         private struct Gantry
         {
             public GantryState state;
             public int buggy;
         }
+
         private struct Section
         {
             public SectionState state;
             public int buggy;
         }
+
         private struct Buggy
         {
             public BuggyOrientation orientation;
-           
+
         }
+
         private Gantry[] gantries;
         private Section[] sections;
         private Buggy[] buggies;
@@ -56,6 +60,7 @@ namespace Buggy
             }
             return gantries[index].state == GantryState.Empty;
         }
+
         public int getBuggyAtGantry(int index)
         {
             if (index < 0 || index >= 3)
@@ -64,6 +69,7 @@ namespace Buggy
             }
             return gantries[index].buggy;
         }
+
         public int getGantryForBuggy(int index)
         {
             if (index < 0 || index >= 2)
@@ -81,6 +87,30 @@ namespace Buggy
             return -1;
         }
 
+        public void setGantryForBuggy(int buggyIndex, int gantryIndex)
+        {
+            if (buggyIndex < 0 || buggyIndex >= 2 ||
+                gantryIndex < 0 || gantryIndex >= 3)
+            {
+                return;
+            }
+            int oldGantryIndex = getGantryForBuggy(buggyIndex);
+            int oldSectionIndex = getSectionForBuggy(buggyIndex);
+            if (oldGantryIndex != -1)
+            {
+                gantries[oldGantryIndex].state = GantryState.Empty;
+                gantries[oldGantryIndex].buggy = -1;
+            }
+            if (oldSectionIndex != -1)
+            {
+                sections[oldSectionIndex].state = SectionState.Empty;
+                sections[oldSectionIndex].buggy = -1;
+            }
+
+            gantries[gantryIndex].state = GantryState.Occupied;
+            gantries[gantryIndex].buggy = buggyIndex;
+        }
+
         public bool isSectionEmpty(int index)
         {
             if (index < 0 || index >= 4)
@@ -89,6 +119,7 @@ namespace Buggy
             }
             return sections[index].state == SectionState.Empty;
         }
+
         public int getBuggyAtSection(int index)
         {
             if (index < 0 || index >= 4)
@@ -97,6 +128,7 @@ namespace Buggy
             }
             return sections[index].buggy;
         }
+
         public int getSectionForBuggy(int index)
         {
             if (index < 0 || index >= 2)
@@ -114,14 +146,39 @@ namespace Buggy
             return -1;
         }
 
+        public void setSectionForBuggy(int buggyIndex, int sectionIndex)
+        {
+            if (buggyIndex < 0 || buggyIndex >= 2 ||
+                sectionIndex < 0 || sectionIndex >= 4)
+            {
+                return;
+            }
+            int oldGantryIndex = getGantryForBuggy(buggyIndex);
+            int oldSectionIndex = getSectionForBuggy(buggyIndex);
+            if (oldGantryIndex != -1)
+            {
+                gantries[oldGantryIndex].state = GantryState.Empty;
+                gantries[oldGantryIndex].buggy = -1;
+            }
+            if (oldSectionIndex != -1)
+            {
+                sections[oldSectionIndex].state = SectionState.Empty;
+                sections[oldSectionIndex].buggy = -1;
+            }
+
+            sections[sectionIndex].state = SectionState.Occupied;
+            sections[sectionIndex].buggy = buggyIndex;
+        }
+
         public BuggyOrientation getOrientationForBuggy(int index)
         {
             if (index < 0 || index >= 2)
             {
-                return -1;
+                return BuggyOrientation.Clockwise;
             }
             return buggies[index].orientation;
         }
+
         public void setOrientationForBuggy(int index, BuggyOrientation orientation)
         {
             if (index < 0 || index >= 2)
@@ -130,35 +187,40 @@ namespace Buggy
             }
             buggies[index].orientation = orientation;
         }
+
         public int getNextSectionForBuggy(int index, bool parking)
         {
-            if(index < 0 || index >= 2)
+            if (index < 0 || index >= 2)
             {
                 return -1;
             }
-            if(getOrientationForBuggy(index) == BuggyOrientation.Clockwise)
+            if (getOrientationForBuggy(index) == BuggyOrientation.Clockwise)
             {
-                if(getSectionForBuggy(index) == 2 || 
+                if (getSectionForBuggy(index) == 2 ||
                     getSectionForBuggy(index) == 3 ||
                     getGantryForBuggy(index) == 0)
                 {
                     return 0;
-                }else if(getSectionForBuggy(index) == 0 ||
-                    getGantryForBuggy(index)  == 1)
+                }
+                else if (getSectionForBuggy(index) == 0 ||
+                   getGantryForBuggy(index) == 1)
                 {
                     if (parking)
                     {
                         return 3;
-                    } else
+                    }
+                    else
                     {
                         return 1;
                     }
-                }else if(getSectionForBuggy(index) == 1 || 
-                    getGantryForBuggy(index) == 2)
+                }
+                else if (getSectionForBuggy(index) == 1 ||
+                   getGantryForBuggy(index) == 2)
                 {
                     return 2;
                 }
-            }else 
+            }
+            else
             {
                 if (getSectionForBuggy(index) == 1 ||
                    getSectionForBuggy(index) == 3 ||
@@ -216,7 +278,8 @@ namespace Buggy
                     {
                         return 2;
                     }
-                }else if(getSectionForBuggy(index) == 1)
+                }
+                else if (getSectionForBuggy(index) == 1)
                 {
                     return 2;
                 }
@@ -252,16 +315,20 @@ namespace Buggy
             }
             return -1;
         }
-        private string getCharacterForBuggyIndex(int index ) {
-            if(index == 0)
+
+        private String getCharacterForBuggyIndex(int index)
+        {
+            if (index == 0)
             {
-                return '1';
-            }else if(index == 1)
+                return "1";
+            }
+            else if (index == 1)
             {
-                return '2';
-            }else
+                return "2";
+            }
+            else
             {
-                return ' ';
+                return " ";
             }
         }
 
@@ -275,13 +342,13 @@ namespace Buggy
                        + " | /             \\ | \n"
                        + " .---E----F----G---. \n"
                        + "                     \n";
-            map = map.Replace('A', getCharacterForBuggyIndex(getBuggyAtSection(0)));
-            map = map.Replace('B', getCharacterForBuggyIndex(getBuggyAtGantry(0)));
-            map = map.Replace('C', getCharacterForBuggyIndex(getBuggyAtGantry(1)));
-            map = map.Replace('D', getCharacterForBuggyIndex(getBuggyAtSection(3)));
-            map = map.Replace('E', getCharacterForBuggyIndex(getBuggyAtSection(2)));
-            map = map.Replace('F', getCharacterForBuggyIndex(getBuggyAtGantry(2)));
-            map = map.Replace('G', getCharacterForBuggyIndex(getBuggyAtSection(1)));
+            map = map.Replace("A", getCharacterForBuggyIndex(getBuggyAtSection(0)));
+            map = map.Replace("B", getCharacterForBuggyIndex(getBuggyAtGantry(0)));
+            map = map.Replace("C", getCharacterForBuggyIndex(getBuggyAtGantry(1)));
+            map = map.Replace("D", getCharacterForBuggyIndex(getBuggyAtSection(3)));
+            map = map.Replace("E", getCharacterForBuggyIndex(getBuggyAtSection(2)));
+            map = map.Replace("F", getCharacterForBuggyIndex(getBuggyAtGantry(2)));
+            map = map.Replace("G", getCharacterForBuggyIndex(getBuggyAtSection(1)));
             return map;
         }
     }
