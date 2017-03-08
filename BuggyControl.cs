@@ -20,12 +20,12 @@ namespace Buggy
         static void Main(string[] args)
         {
             track = new Track();
-            track.setOrientationForBuggy(0, Track.BuggyOrientation.Clockwise);
+            track.setOrientationOfBuggy(0, BuggyOrientation.Clockwise);
             track.setSectionForBuggy(0, 3);
             round = 0;
 
             port = new SerialPort();
-            port.PortName = "COM7";
+            port.PortName = "COM8";
             port.BaudRate = 9600;
             port.Open();
 
@@ -34,7 +34,18 @@ namespace Buggy
                 port.Write("+++");
                 Thread.Sleep(1100);
                 port.WriteLine("ATID 3304, CH C, CN");
-                Thread.Sleep(9000);
+
+                const double duration = 9;
+                const double T = 0.25;
+
+                for (int i = 0; i < duration / T; i++)
+                {
+                    Thread.Sleep((int)(T * 1000));
+                    Console.Write("+");
+                }
+
+                Console.WriteLine();
+                Console.WriteLine("Ready");
             }
 
             port.DiscardInBuffer();
@@ -42,7 +53,7 @@ namespace Buggy
 
             while (true)
             {
-                Console.WriteLine("> ");
+                Console.Write(">");
 
                 String outmessage = Console.ReadLine();
 
@@ -55,6 +66,11 @@ namespace Buggy
                         Console.WriteLine(archive[i]);
                     }
 
+                }
+                else if (outmessage == "exit")
+                {
+                    port.Close();
+                    return;
                 }
                 else if (outmessage == "Start Bronze")
                 {
@@ -71,19 +87,19 @@ namespace Buggy
                                         SerialDataReceivedEventArgs e)
         {
             String inmessage = port.ReadLine();
-            Console.WriteLine(inmessage);
+
             archive.Add(inmessage);
 
-            if(inmessage.StartsWith("Detected Gantry "))
+            if (inmessage.StartsWith("Detected Gantry "))
             {
                 int gantry = Int32.Parse(inmessage.Substring(16));
 
-                if(gantry == 0)
+                if (gantry == 0)
                 {
                     gantry = track.getNextGantryForBuggy(0, false);
                 }
                 gantry--;
-                if(gantry != track.getGantryForBuggy(0))
+                if (gantry != track.getGantryForBuggy(0))
                 {
                     if (gantry == 1)
                     {
@@ -109,16 +125,15 @@ namespace Buggy
 
 
             }
-            else if(inmessage == "Buggy Parked")
+            else if (inmessage == "Buggy Parked")
             {
                 Console.WriteLine();
-                Console.WriteLine("Bronze Challenge Complete!");
-                Console.Write("> ");
+                Console.Write("Bronze Challenge Complete!");
             }
 
             Console.WriteLine();
             Console.WriteLine("*" + inmessage);
-            Console.Write("> ");
+            Console.Write(">");
         }
 
         static void send(String message)
