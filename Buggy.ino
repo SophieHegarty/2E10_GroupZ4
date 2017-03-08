@@ -1,9 +1,9 @@
 //Constants:
 #define Control_Pin 3
 #define InfraRed_Pin 2
-#define UltraSonic_Ground_Pin 5
-#define UltraSonic_Power_Pin 6
-#define UltraSonic_Signal_Pin 7
+#define UltraSonic_Ground_Pin A2
+#define UltraSonic_Power_Pin A3
+#define UltraSonic_Signal_Pin A4
 
 #define Buggy_Stop 2
 #define Buggy_FollowLine 4
