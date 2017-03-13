@@ -23,13 +23,17 @@ namespace Buggy
         static void Main(string[] args)
         {
             track = new Track();
-            track.setOrientationOfBuggy(0, BuggyOrientation.Clockwise);
-            track.setSectionForBuggy(0, 3);
+            
             mode = OperationMode.Manual;
             round = 0;
 
+            Console.Title = "Z4 Buggy Control";
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Clear();
+
             port = new SerialPort();
-            port.PortName = "COM8";
+            port.PortName = "COM19";
             port.BaudRate = 9600;
             port.Open();
 
@@ -52,6 +56,9 @@ namespace Buggy
                 Console.WriteLine("Ready");
             }
 
+            Console.Clear();
+            Console.SetCursorPosition(0, 0);
+
             port.DiscardInBuffer();
             port.DataReceived += new SerialDataReceivedEventHandler(DataReceivedHandler);
 
@@ -61,7 +68,17 @@ namespace Buggy
 
                 String outmessage = Console.ReadLine();
 
-                if (outmessage == "print archive")
+                if (outmessage == "exit")
+                {
+                    port.Close();
+                    return;
+                }
+                else if (outmessage == "clear")
+                {
+                    Console.Clear();
+                    Console.SetCursorPosition(0, 0);
+                }
+                else if (outmessage == "print archive")
                 {
                     Console.WriteLine();
 
@@ -71,10 +88,13 @@ namespace Buggy
                     }
 
                 }
-                else if (outmessage == "exit")
+                else if (outmessage == "Connect Buggy 1")
                 {
-                    port.Close();
-                    return;
+                    send(0, "Buggy is 1");
+                }
+                else if (outmessage == "Connect Buggy 2")
+                {
+                    send(0, "Buggy is 2");
                 }
                 else if (outmessage == "Start Bronze")
                 {
@@ -99,10 +119,33 @@ namespace Buggy
 
             archive.Add(inmessage);
 
+            Console.WriteLine();
+            Console.WriteLine(inmessage);
+
+            if ('0' > inmessage[0] || '9' < inmessage[0])
+            {
+                Console.Write(">");
+                return;
+            }
+            
             int buggy = Int32.Parse(inmessage.Substring(0, 1));
             inmessage = inmessage.Substring(3).ToLower();
 
-            if (inmessage == "buggy running")
+            if (inmessage == "buggy id set to 1")
+            {
+                track.setOrientationOfBuggy(0, BuggyOrientation.Clockwise);
+                track.setSectionForBuggy(0, 3);
+
+                Console.WriteLine("Buggy 1 connected!");
+            }
+            else if (inmessage == "buggy id set to 2")
+            {
+                track.setOrientationOfBuggy(1, BuggyOrientation.CounterClockwise);
+                track.setSectionForBuggy(1, 3);
+
+                Console.WriteLine("Buggy 2 connected!");
+            }
+            else if (inmessage == "buggy running")
             {
                 track.setMovementOfBuggy(buggy - 1, BuggyMovement.FollowingLine);
             }
@@ -122,7 +165,7 @@ namespace Buggy
             {
                 track.setMovementOfBuggy(buggy - 1, BuggyMovement.Rotating);
             }
-            else if(inmessage == "buggy reducing power")
+            else if (inmessage == "buggy reducing power")
             {
                 track.setSpeedOfBuggy(buggy - 1, track.getSpeedOfBuggy(buggy - 1) - 0.1);
             }
@@ -150,8 +193,7 @@ namespace Buggy
 
                 if (mode == OperationMode.Bronze)
                 {
-                    Console.WriteLine();
-                    Console.Write("Bronze challenge complete!");
+                    Console.WriteLine("Bronze challenge complete!");
                 }
             }
             else if (inmessage.StartsWith("detected gantry"))
@@ -185,8 +227,6 @@ namespace Buggy
                 track.setBuggyHasObstacle(buggy - 1, false);
             }
 
-            Console.WriteLine();
-            Console.WriteLine(buggy + inmessage);
             Console.Write(">");
         }
 
@@ -204,5 +244,5 @@ namespace Buggy
             Console.Write("> ");
         }
     }
-    
+
 }
