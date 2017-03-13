@@ -1,4 +1,3 @@
-//Constants:
 #define Control_Pin 3
 #define InfraRed_Pin 2
 #define UltraSonic_Ground_Pin A2
@@ -33,6 +32,7 @@
 //DEBUGUS controls verbose output of Ultra Sonic related messages
 
 //States:
+int buggyID;
 String message;
 bool messageComplete;
 //Used for exchange between serialEvent() and loop()
@@ -69,7 +69,8 @@ void setup() {
   }
   
   while(Serial.read() != -1) {};
-  
+
+  buggyID = 0;
   message = "";
   messageComplete = false;
   gantry = 0;
@@ -87,7 +88,13 @@ void loop() {
   if (messageComplete) {
     message.toLowerCase();
     
-    if (message == "run") {
+    if (message == "Buggy is 1") {
+      buggyID = 1;
+      send("Buggy ID set to 1");
+    }else if (message == "Buggy is 2") {
+      buggyID = 2;
+      send("Buggy ID set to 2");
+    }else if (message == "run") {
       buggycontrol(Buggy_FollowLine);
       send("Buggy Running");
     }else if (message == "stop") {
