@@ -2,13 +2,16 @@ using System;
 
 namespace Buggy
 {
-    
+
     public enum BuggyOrientation { Clockwise, CounterClockwise };
-    public enum BuggyMovement { Stopped, 
-                                FollowingLine, 
-                                TurningRight, 
-                                TurningLeft, 
-                                Rotating };
+    public enum BuggyMovement
+    {
+        Stopped,
+        FollowingLine,
+        TurningRight,
+        TurningLeft,
+        Rotating
+    };
 
     public class Track
     {
@@ -32,6 +35,7 @@ namespace Buggy
             public BuggyOrientation orientation;
             public BuggyMovement movement;
             public double speed; //Between 0.0 and 1.0
+            public bool obstacle;
         }
 
         private Gantry[] gantries;
@@ -55,12 +59,15 @@ namespace Buggy
             };
             buggies = new Buggy[]
             {
-                new Buggy() {orientation = BuggyOrientation.Clockwise, 
-                                movement = BuggyMovement.Stopped, 
-                                   speed = 0.5 },
                 new Buggy() {orientation = BuggyOrientation.Clockwise,
                                 movement = BuggyMovement.Stopped,
-                                   speed = 0.5 }
+                                   speed = 0.5,
+                                obstacle = false},
+                new Buggy() {orientation = BuggyOrientation.Clockwise,
+                                movement = BuggyMovement.Stopped,
+                                   speed = 0.5,
+                                obstacle = false}
+
             };
         }
 
@@ -243,6 +250,25 @@ namespace Buggy
             buggies[index].speed = speed;
         }
 
+        public bool hasBuggyObstacle(int index)
+        {
+            if (index < 0 || index >= 2)
+            {
+                return false;
+            }
+
+            return buggies[index].obstacle;
+        }
+        public void setBuggyHasObstacle(int index, bool obstacle)
+        {
+            if (index < 0 || index >= 2)
+            {
+                return;
+            }
+
+            buggies[index].obstacle = obstacle;
+        }
+
         public int getNextSectionForBuggy(int index, bool parking)
         {
             if (index < 0 || index >= 2)
@@ -408,3 +434,4 @@ namespace Buggy
         }
     }
 }
+
