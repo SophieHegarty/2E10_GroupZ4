@@ -15,6 +15,9 @@ namespace Buggy
         static List<String> archive = new List<String>();
         static SerialPort port;
         static Track track;
+
+        private enum OperationMode { Manual, Bronze, Silver, Gold };
+        static OperationMode mode;
         static int round;
 
         static void Main(string[] args)
@@ -22,6 +25,7 @@ namespace Buggy
             track = new Track();
             track.setOrientationOfBuggy(0, BuggyOrientation.Clockwise);
             track.setSectionForBuggy(0, 3);
+            mode = OperationMode.Manual;
             round = 0;
 
             port = new SerialPort();
@@ -74,11 +78,16 @@ namespace Buggy
                 }
                 else if (outmessage == "Start Bronze")
                 {
-                    send("Run");
+                    mode = OperationMode.Bronze;
+                    send(1, "Run");
                 }
-                else
+                else if (outmessage.StartsWith("1: "))
                 {
-                    send(outmessage);
+                    send(1, outmessage.Substring(3));
+                }
+                else if (outmessage.StartsWith("2: "))
+                {
+                    send(2, outmessage.Substring(3));
                 }
             }
         }
@@ -90,58 +99,102 @@ namespace Buggy
 
             archive.Add(inmessage);
 
-            if (inmessage.StartsWith("Detected Gantry "))
+            int buggy = Int32.Parse(inmessage.Substring(0, 1));
+            inmessage = inmessage.Substring(3).ToLower();
+
+            if (inmessage == "buggy running")
+            {
+                track.setMovementOfBuggy(buggy - 1, BuggyMovement.FollowingLine);
+            }
+            else if (inmessage == "buggy stopping")
+            {
+                track.setMovementOfBuggy(buggy - 1, BuggyMovement.Stopped);
+            }
+            else if (inmessage == "buggy turning right")
+            {
+                track.setMovementOfBuggy(buggy - 1, BuggyMovement.TurningRight);
+            }
+            else if (inmessage == "buggy turning left")
+            {
+                track.setMovementOfBuggy(buggy - 1, BuggyMovement.TurningLeft);
+            }
+            else if (inmessage == "buggy rotating left")
+            {
+                track.setMovementOfBuggy(buggy - 1, BuggyMovement.Rotating);
+            }
+            else if(inmessage == "buggy reducing power")
+            {
+                track.setSpeedOfBuggy(buggy - 1, track.getSpeedOfBuggy(buggy - 1) - 0.1);
+            }
+            else if (inmessage == "buggy increasing power")
+            {
+                track.setSpeedOfBuggy(buggy - 1, track.getSpeedOfBuggy(buggy - 1) + 0.1);
+            }
+            else if (inmessage == "buggy half power")
+            {
+                track.setSpeedOfBuggy(buggy - 1, 0.5);
+            }
+            else if (inmessage == "buggy full power")
+            {
+                track.setSpeedOfBuggy(buggy - 1, 1.0);
+            }
+            else if (inmessage == "passed gantry")
+            {
+                track.setSectionForBuggy(buggy - 1, track.getNextSectionForBuggy(buggy - 1, false));
+                printTrack();
+            }
+            else if (inmessage == "buggy parked")
+            {
+                track.setSectionForBuggy(buggy - 1, track.getNextSectionForBuggy(buggy - 1, true));
+                printTrack();
+
+                if (mode == OperationMode.Bronze)
+                {
+                    Console.WriteLine();
+                    Console.Write("Bronze challenge complete!");
+                }
+            }
+            else if (inmessage.StartsWith("detected gantry"))
             {
                 int gantry = Int32.Parse(inmessage.Substring(16));
+                track.setGantryForBuggy(buggy - 1, gantry - 1);
+                printTrack();
 
-                if (gantry == 0)
+                if (mode == OperationMode.Bronze)
                 {
-                    gantry = track.getNextGantryForBuggy(0, false);
-                }
-                gantry--;
-                if (gantry != track.getGantryForBuggy(0))
-                {
-                    if (gantry == 1)
+                    if (gantry == 2)
                     {
                         round++;
                     }
-
-                    track.setGantryForBuggy(0, gantry);
-                    printTrack();
                     if (round < 2)
                     {
-                        send("leave gantry");
-                        track.setSectionForBuggy(0, track.getNextSectionForBuggy(0, false));
-                        printTrack();
+                        send(1, "leave gantry");
                     }
                     else
                     {
-                        send("park right");
-                        track.setSectionForBuggy(0, track.getNextSectionForBuggy(0, true));
-                        printTrack();
+                        send(1, "park right");
                     }
-
                 }
-
-
             }
-            else if (inmessage == "Buggy Parked")
+            else if (inmessage == "obstacle detected")
             {
-                Console.WriteLine();
-                Console.Write("Bronze Challenge Complete!");
+                track.setBuggyHasObstacle(buggy - 1, true);
+            }
+            else if (inmessage == "obstacle gone")
+            {
+                track.setBuggyHasObstacle(buggy - 1, false);
             }
 
             Console.WriteLine();
-            Console.WriteLine("*" + inmessage);
+            Console.WriteLine(buggy + inmessage);
             Console.Write(">");
         }
 
-        static void send(String message)
+        static void send(int buggy, String message)
         {
-            archive.Add(message);
-
+            archive.Add(buggy + ": " + message);
             port.DiscardOutBuffer();
-            port.WriteLine(message);
+            port.WriteLine(buggy + ": " + message);
         }
 
         static void printTrack()
@@ -151,5 +204,5 @@ namespace Buggy
             Console.Write("> ");
         }
     }
-
+    
 }
