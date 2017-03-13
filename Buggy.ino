@@ -33,6 +33,7 @@
 
 //States:
 int buggyID;
+bool ideal;
 String message;
 bool messageComplete;
 //Used for exchange between serialEvent() and loop()
@@ -76,6 +77,7 @@ void setup() {
   gantry = 0;
   gantryChange = false;
   ignoreIR = false;
+  ideal = false;
   lastUSCheck = millis();
   obstacle = false;
   
@@ -94,113 +96,123 @@ void loop() {
     }else if (message == "Buggy is 2") {
       buggyID = 2;
       send("Buggy ID set to 2");
-    }else if (message == "run") {
-      buggycontrol(Buggy_FollowLine);
-      send("Buggy Running");
-    }else if (message == "stop") {
-      buggycontrol(Buggy_Stop);
-      send("Buggy Stopping");
-    }else if(message == "leave gantry"){
-      ignoreIR = true;
-      
-      buggycontrol(Buggy_FollowLine);
-      delay(1000);
-  
-      if (DEBUGIR) {
-        send("Passed gantry");
-      }
-      
-      ignoreIR = false;
-      
-    }else if (message == "park right") {
-      ignoreIR = true;
-      
-      buggycontrol(Buggy_TurnRight);
-      delay(3000);
-      buggycontrol(Buggy_FollowLine);
-      delay(3000);
-      buggycontrol(Buggy_Stop);
-      
-      ignoreIR = false;
-      
-      send("Buggy Parked");
-    }else if (message == "park left") {
-      ignoreIR = true;
-      
-      buggycontrol(Buggy_TurnLeft);
-      delay(3000);
-      buggycontrol(Buggy_FollowLine);
-      delay(3000);
-      buggycontrol(Buggy_Stop);
-      
-      ignoreIR = false;
-      
-      send("Buggy Parked");
-    }else if (message == "turn right") {
-     buggycontrol(Buggy_TurnRight);
-      send("Buggy Turning Right");
-    }else if (message == "turn left") {
-     buggycontrol(Buggy_TurnLeft);
-      send("Buggy Turning Left");
-    }else if (message == "rotate left") {
-     buggycontrol(Buggy_RotateLeft);
-      send("Buggy Rotating Left");
-    }else if (message == "reduce power") {
-     buggycontrol(Buggy_ReducePower);
-      send("Buggy Reducing Power");
-    }else if (message == "increase power") {
-     buggycontrol(Buggy_IncreasePower);
-      send("Buggy Increasing Power");
-    }else if (message == "half power") {
-     buggycontrol(Buggy_HalfPower);
-      send("Buggy Half Power");
-    }else if (message == "full power") {
-     buggycontrol(Buggy_FullPower);
-      send("Buggy Full Power");
-    }else if (message == "test") {
-      send("Working");
-    }else{
-      send("Invalid message: " + message);
     }
-    
-    message = "";
-    messageComplete = false;
-  }
-  
-  if(gantryChange == true){
-    gantryChange = false;
-    
-    buggycontrol(Buggy_Stop);
-     
-    send("Detected Gantry " + String(gantry));
-  }
-  
-  unsigned long t = millis();
-  
-  if (t - lastUSCheck > USCheckInterval) {
-    lastUSCheck = t;
-    
-    if (hasObstacle()) {
-      if (!obstacle) {
-        obstacle = true;
-        
-        send("Obstacle detected");
-        
-        buggycontrol(Buggy_Stop);
-      }
-     
-    }else{
-      if (obstacle) {
-        obstacle = false;
-        
-        send("Obstacle gone");
-        
-        buggycontrol(Buggy_FollowLine);
-      }
-    }
-  }
-}
 
+    else if ((message.substring(0,3) == "1: " && buggyID==1) || (message.substring(0,3)=="2: " && buggyID == 2)){
+    
+           if (message.substring(3) == "run") {
+            buggycontrol(Buggy_FollowLine);
+            ideal = true;
+            send("Buggy Running");
+          }else if (message.substring(3) == "stop") {
+            buggycontrol(Buggy_Stop);
+            ideal = false;
+            send("Buggy Stopping");
+          }else if(message.substring(3) == "leave gantry"){
+            ignoreIR = true;
+            
+            buggycontrol(Buggy_FollowLine);
+            delay(1000);
+        
+            if (DEBUGIR) {
+              send("Passed gantry");
+            }
+            
+            ignoreIR = false;
+            
+          }else if (message.substring(3) == "park right") {
+            ignoreIR = true;
+            
+            buggycontrol(Buggy_TurnRight);
+            delay(3000);
+            buggycontrol(Buggy_FollowLine);
+            delay(3000);
+            buggycontrol(Buggy_Stop);
+            
+            ignoreIR = false;
+            
+            send("Buggy Parked");
+          }else if (message.substring(3) == "park left") {
+            ignoreIR = true;
+            
+            buggycontrol(Buggy_TurnLeft);
+            delay(3000);
+            buggycontrol(Buggy_FollowLine);
+            delay(3000);
+            buggycontrol(Buggy_Stop);
+            
+            ignoreIR = false;
+            
+            send("Buggy Parked");
+          }else if (message.substring(3) == "turn right") {
+           buggycontrol(Buggy_TurnRight);
+            send("Buggy Turning Right");
+          }else if (message.substring(3) == "turn left") {
+           buggycontrol(Buggy_TurnLeft);
+            send("Buggy Turning Left");
+          }else if (message.substring(3) == "rotate left") {
+           buggycontrol(Buggy_RotateLeft);
+            send("Buggy Rotating Left");
+          }else if (message.substring(3) == "reduce power") {
+           buggycontrol(Buggy_ReducePower);
+            send("Buggy Reducing Power");
+          }else if (message.substring(3) == "increase power") {
+           buggycontrol(Buggy_IncreasePower);
+            send("Buggy Increasing Power");
+          }else if (message.substring(3) == "half power") {
+           buggycontrol(Buggy_HalfPower);
+            send("Buggy Half Power");
+          }else if (message.substring(3) == "full power") {
+           buggycontrol(Buggy_FullPower);
+            send("Buggy Full Power");
+          }else if (message.substring(3) == "test") {
+            send("Working");
+          }else{
+            send("Invalid message: " + message);
+          }
+          
+          message = "";
+          messageComplete = false;
+        }
+        
+        if(gantryChange == true){
+          gantryChange = false;
+          
+          buggycontrol(Buggy_Stop);
+           
+          send("Detected Gantry " + String(gantry));
+        }
+        
+        unsigned long t = millis();
+        
+        if (t - lastUSCheck > USCheckInterval) {
+          lastUSCheck = t;
+          
+          if (hasObstacle()) {
+            if (!obstacle) {
+              obstacle = true;
+              
+              send("Obstacle detected");
+              
+              buggycontrol(Buggy_Stop);
+            }
+           
+          }else{
+            if (obstacle) {
+              obstacle = false;
+              
+              send("Obstacle gone");
+              if (ideal){
+                buggycontrol(Buggy_FollowLine);
+              }
+              else{
+                buggycontrol(Buggy_Stop);
+              }
+            }
+          }
+        }
+      }
+}
 void serialEvent(){
   while (Serial.available()) {
     if (messageComplete) continue;
@@ -215,7 +227,8 @@ void serialEvent(){
 }
 
 void send(String message) {
-  Serial.println(message);
+  Serial.print(message + "  ");
+  Serial.println(buggyID);
   Serial.flush();
 }
 
@@ -304,6 +317,5 @@ void buggycontrol(int  mode){
     digitalWrite(Control_Pin, HIGH);
     delay(mode); //Pulse length
     digitalWrite(Control_Pin, LOW);
-    delay(20); //Avoid sending too closly packed pulses
-  }
-}
+    delay(20); //Avoid sending too }
+  }  }
