@@ -40,6 +40,7 @@ bool messageComplete;
 
 volatile int gantry;
 volatile bool gantryChange;
+bool gantryCheck;
 volatile bool ignoreIR;
 //Used for exchange between IRDetected() and loop()
 //Volatile because IRDetected() is an interrupt handler
@@ -76,6 +77,7 @@ void setup() {
   messageComplete = false;
   gantry = 0;
   gantryChange = false;
+  gantryCheck = false;
   ignoreIR = false;
   ideal = false;
   lastUSCheck = millis();
@@ -174,14 +176,22 @@ void loop() {
           message = "";
           messageComplete = false;
         }
-        
+        int count = 0;
         if(gantryChange == true){
+          count = count +1;
           gantryChange = false;
-          
-          buggycontrol(Buggy_Stop);
-           
-          send("Detected Gantry " + String(gantry));
+        if (count == 1){
+          gantryCheck =true; 
         }
+         else {
+          gantryCheck = false; 
+         }
+          buggycontrol(Buggy_Stop);
+           if(gantryCheck){
+          send("Detected Gantry " + String(gantry));
+           }
+         }
+        
         
         unsigned long t = millis();
         
@@ -264,6 +274,7 @@ bool hasObstacle() {
 
 //Interrupt handler for IR sensors
 void IRDetected(){
+
   if(ignoreIR || gantryChange){
     if (DEBUGIR) {
       send("IR ignored");
