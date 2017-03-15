@@ -28,12 +28,12 @@ namespace Buggy
             round = 0;
 
             Console.Title = "Z4 Buggy Control";
-            Console.BackgroundColor = ConsoleColor.Black;
-            Console.ForegroundColor = ConsoleColor.Green;
+            Console.BackgroundColor = ConsoleColor.White;
+            Console.ForegroundColor = ConsoleColor.Black;
             Console.Clear();
 
             port = new SerialPort();
-            port.PortName = "COM19";
+            port.PortName = "COM9";
             port.BaudRate = 9600;
             port.Open();
 
@@ -41,19 +41,24 @@ namespace Buggy
             {
                 port.Write("+++");
                 Thread.Sleep(1100);
-                port.WriteLine("ATID 3304, CH C, CN");
+                port.WriteLine("ATID 1234, CH C, CN");
 
                 const double duration = 9;
                 const double T = 0.25;
 
+                Console.WriteLine();
+                Console.WriteLine(" Group Z4 Buggy Control (c) 2017");
+                Console.WriteLine();
+                Console.Write(" Loading: ");
+                Console.ForegroundColor = ConsoleColor.Blue;
+
                 for (int i = 0; i < duration / T; i++)
                 {
                     Thread.Sleep((int)(T * 1000));
-                    Console.Write("+");
+                    Console.Write("█");
                 }
 
-                Console.WriteLine();
-                Console.WriteLine("Ready");
+                Console.ForegroundColor = ConsoleColor.Black;
             }
 
             Console.Clear();
@@ -129,7 +134,7 @@ namespace Buggy
             }
             
             int buggy = Int32.Parse(inmessage.Substring(0, 1));
-            inmessage = inmessage.Substring(3).ToLower();
+            inmessage = inmessage.Substring(3, inmessage.Length - 4).ToLower();
 
             if (inmessage == "buggy id set to 1")
             {
@@ -186,7 +191,7 @@ namespace Buggy
                 track.setSectionForBuggy(buggy - 1, track.getNextSectionForBuggy(buggy - 1, false));
                 printTrack();
             }
-            else if (inmessage == "buggy parked")
+            else if (inmessage =="buggy parked")
             {
                 track.setSectionForBuggy(buggy - 1, track.getNextSectionForBuggy(buggy - 1, true));
                 printTrack();
