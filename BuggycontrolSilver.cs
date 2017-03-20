@@ -33,7 +33,7 @@ namespace Buggy
             Console.Clear();
 
             port = new SerialPort();
-            port.PortName = "COM9";
+            port.PortName = "COM8";
             port.BaudRate = 9600;
             port.Open();
 
@@ -61,7 +61,7 @@ namespace Buggy
                 Console.ForegroundColor = ConsoleColor.Black;
             }
 
-            Console.Clear();
+            Console.Clear(); 
             Console.SetCursorPosition(0, 0);
 
             port.DiscardInBuffer();
@@ -232,10 +232,12 @@ namespace Buggy
                     }
                     if (buggy1rounds < 2)
                     {
+                        Thread.Sleep(500);
                         send(1, "leave gantry");
                     }
                     else
                     {
+                        Thread.Sleep(500);
                         send(1, "park right");
                     }
                 }
