@@ -25,8 +25,8 @@
 
 //Debugging:
 #define DEBUG false
-#define DEBUGIR false
-#define DEBUGUS true
+#define DEBUGIR true
+#define DEBUGUS false
 //DEBUG controls verbose output of general messages
 //DEBUGIR controls verbose output of Infra Red related messages
 //DEBUGUS controls verbose output of Ultra Sonic related messages
@@ -214,11 +214,13 @@ void loop() {
     messageComplete = false;
   }
   
-  //int count = 0;
-  if(gantryChange == true){
-    //count = count +1;
+  if (gantryChange == true) {
     gantryChange = false;
+
+    delay(400);
+    
     buggycontrol(Buggy_Stop);  
+    
     send("Detected Gantry " + String(gantry));
   }
        
