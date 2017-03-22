@@ -110,7 +110,8 @@ void loop() {
         send("Buggy Stopping");
       }else if(message == "leave gantry"){
         ignoreIR = true;
-        
+
+        desiredMode = Buggy_FollowLine;
         buggycontrol(Buggy_FollowLine);
         delay(1000);
     
@@ -176,7 +177,25 @@ void loop() {
         ignoreIR = false;
         
         send("Buggy Parked");
-      }else if (message == "turn right") {
+      }else if (message == "continue right") {
+        ignoreIR = true;
+        
+        buggycontrol(Buggy_TurnRight);
+        for(int i = 0; i < 30; i++){
+          if(hasObstacle()){
+            buggycontrol(Buggy_Stop);
+            i--;
+          }else{
+            buggycontrol(Buggy_TurnRight);
+          }
+          delay(100);
+        }
+        buggycontrol(Buggy_FollowLine);
+        ignoreIR = false;
+        
+        send("Continuing right");
+      }
+      else if (message == "turn right") {
         buggycontrol(Buggy_TurnRight);
         desiredMode = Buggy_TurnRight;
         send("Buggy Turning Right");
@@ -189,19 +208,15 @@ void loop() {
         buggycontrol(Buggy_RotateLeft);
         send("Buggy Rotating Left");
       }else if (message == "reduce power") {
-        desiredMode = Buggy_ReducePower;
         buggycontrol(Buggy_ReducePower);
         send("Buggy Reducing Power");
       }else if (message == "increase power") {
-        desiredMode = Buggy_IncreasePower;
         buggycontrol(Buggy_IncreasePower);
         send("Buggy Increasing Power");
       }else if (message == "half power") {
-        desiredMode = Buggy_HalfPower;
         buggycontrol(Buggy_HalfPower);
         send("Buggy Half Power");
       }else if (message == "full power") {
-        desiredMode = Buggy_FullPower;
         buggycontrol(Buggy_FullPower);
         send("Buggy Full Power");
       }else if (message == "test") {
@@ -218,7 +233,8 @@ void loop() {
     gantryChange = false;
 
     delay(400);
-    
+
+    desiredMode = Buggy_Stop;
     buggycontrol(Buggy_Stop);  
     
     send("Detected Gantry " + String(gantry));
