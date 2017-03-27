@@ -161,7 +161,38 @@ namespace Buggy
             int buggy = Int32.Parse(inmessage.Substring(0, 1));
             inmessage = inmessage.Substring(3, inmessage.Length - 4).ToLower();
 
-            if (inmessage == "buggy id set to 1")
+            if (inmessage == "buggy turned on")
+            {
+                BuggyMovement movement = track.getMovementOfBuggy(buggy - 1);
+                double speed = track.getSpeedOfBuggy(buggy - 1);
+                
+                if (movement == BuggyMovement.Stopped)
+                {
+                    send(buggy, "stop");
+                }
+                else if (movement == BuggyMovement.FollowingLine)
+                {
+                    send(buggy, "run");
+                }
+                else if (movement == BuggyMovement.TurningRight)
+                {
+                    send(buggy, "turn right");
+                }
+                else if (movement == BuggyMovement.TurningLeft)
+                {
+                    send(buggy, "turn left");
+                }
+                else if (movement == BuggyMovement.Rotating)
+                {
+                    send(buggy, "rotate left");
+                }
+                
+                send(buggy, "full power");
+                for (int i = 0; i < (1.0 - speed) / 0.1; i++)
+                    send(buggy, "reduce power");
+                
+            }
+            else if (inmessage == "buggy id set to 1")
             {
                 track.setOrientationOfBuggy(0, BuggyOrientation.Clockwise);
                 track.setSectionForBuggy(0, 3);
