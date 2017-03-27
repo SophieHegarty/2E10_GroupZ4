@@ -131,6 +131,10 @@ namespace Buggy
                         Console.WriteLine("invalid input!");
                     }
                 }
+                else if (outmessage.StartsWith("0: "))
+                {
+                    send(0, outmessage.Substring(3));
+                }
                 else if (outmessage.StartsWith("1: "))
                 {
                     send(1, outmessage.Substring(3));
@@ -138,6 +142,10 @@ namespace Buggy
                 else if (outmessage.StartsWith("2: "))
                 {
                     send(2, outmessage.Substring(3));
+                }
+                else if (outmessage.StartsWith("X: "))
+                {
+                    send(-1, outmessage.Substring(3));
                 }
             }
         }
@@ -433,7 +441,14 @@ namespace Buggy
         {
             archive.Add(buggy + ": " + message);
             port.DiscardOutBuffer();
-            port.WriteLine(buggy + ": " + message);
+            if (buggy == -1)
+            {
+                port.WriteLine("X: " + message);
+            }
+            else
+            {
+                port.WriteLine(buggy + ": " + message);
+            }
         }
 
         static void printTrack()
