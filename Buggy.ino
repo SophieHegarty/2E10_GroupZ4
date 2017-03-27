@@ -86,6 +86,8 @@ void setup() {
   if (DEBUG) {
     send("Setup done");
   }
+  
+  send("Buggy turned on");
 }
 
 void loop() {  
