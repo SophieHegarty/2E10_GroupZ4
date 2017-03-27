@@ -32,6 +32,7 @@
 //DEBUGUS controls verbose output of Ultra Sonic related messages
 
 //States:
+bool sentStartupMessage;
 int buggyID;
 int desiredMode;
 String message;
@@ -40,7 +41,6 @@ bool messageComplete;
 
 volatile int gantry;
 volatile bool gantryChange;
-bool gantryCheck;
 volatile bool ignoreIR;
 //Used for exchange between IRDetected() and loop()
 //Volatile because IRDetected() is an interrupt handler
@@ -61,125 +61,168 @@ void setup() {
 
   pinMode(UltraSonic_Ground_Pin, OUTPUT);
   digitalWrite(UltraSonic_Ground_Pin, LOW);
+
+  buggycontrol(Buggy_Stop);
   
   Serial.begin(9600);
   if (XBee) {
     Serial.print("+++");
+    Serial.flush();
     delay(1500);
-    Serial.println("ATID 1234, CH, C, CN");
+    Serial.println("ATID 3304, CH, C, CN");
+    Serial.flush();
     delay(1100);
   }
   
   while(Serial.read() != -1) {};
 
-  buggyID = 0;
+  sentStartupMessage = false;
+  buggyID = 1;
+  desiredMode = Buggy_Stop;
   message = "";
   messageComplete = false;
+  
   gantry = 0;
   gantryChange = false;
-  gantryCheck = false;
   ignoreIR = false;
-  desiredMode = Buggy_Stop;
+  
   lastUSCheck = millis();
   obstacle = false;
   
   if (DEBUG) {
     send("Setup done");
   }
-  
-  send("Buggy turned on");
 }
 
-void loop() {  
+void loop() {
+  if (sentStartupMessage == false) {
+    send("Buggy turned on");
+    
+    sentStartupMessage = true;
+  }
+  
   if (messageComplete) {
     message.toLowerCase();
-    
+
+    //Each buggy has an ID stored in buggyID
+    //A buggy respons to messages to "X" or to its ID
+    //For example:  X: stop   [Stops all buggies]
+    //Or:           2: run    [Tells buggy 2 to run]
     if (message.substring(0, 1) == "x" || 
         message.substring(0, 1).toInt() == buggyID) {
       message.remove(0,3);
+      
       if (message == "buggy is 1") {
         buggyID = 1;
+        
         send("Buggy ID set to 1");
+        
       }else if (message == "buggy is 2") {
          buggyID = 2;
+         
          send("Buggy ID set to 2");
+         
       }else if (message == "run") {
         buggycontrol(Buggy_FollowLine);
         desiredMode = Buggy_FollowLine;
+        
         send("Buggy Running");
+        
       }else if (message == "stop") {
         buggycontrol(Buggy_Stop);
         desiredMode = Buggy_Stop;
+        
         send("Buggy Stopping");
+        
       }else if(message == "leave gantry"){
         ignoreIR = true;
 
         desiredMode = Buggy_FollowLine;
         buggycontrol(Buggy_FollowLine);
+        
         delay(1000);
-    
-        if (DEBUGIR) {
-          send("Passed gantry");
-        }
-            
+        
         ignoreIR = false;
+        
+        send("Passed gantry");
             
       }else if (message == "park right") {
         ignoreIR = true;
         
         buggycontrol(Buggy_TurnRight);
-        for(int i = 0; i < 30; i++){
+        
+        for(int i = 0; i < 20; i++){
           if(hasObstacle()){
             buggycontrol(Buggy_Stop);
             i--;
+            
           }else{
             buggycontrol(Buggy_TurnRight);
           }
+          
           delay(100);
         }
+        
         buggycontrol(Buggy_FollowLine);
-        for(int i = 0; i < 30; i++){
+        
+        for(int i = 0; i < 20; i++){
+          
           if(hasObstacle()){
             buggycontrol(Buggy_Stop);
             i--;
+            
           }else{
             buggycontrol(Buggy_FollowLine);
           }
+          
           delay(100);
         }
+        
         buggycontrol(Buggy_Stop);
         desiredMode = Buggy_Stop;
+        
         ignoreIR = false;
         
         send("Buggy Parked");
+        
       }else if (message == "park left") {
         ignoreIR = true;
         
         buggycontrol(Buggy_TurnLeft);
-        for(int i = 0; i < 30; i++){
+        
+        for(int i = 0; i < 20; i++){
           if(hasObstacle()){
             buggycontrol(Buggy_Stop);
             i--;
+            
           }else{
             buggycontrol(Buggy_TurnLeft);
           }
+          
           delay(100);
         }
+        
         buggycontrol(Buggy_FollowLine);
-        for(int i = 0; i < 30; i++){
+        
+        for(int i = 0; i < 20; i++){
           if(hasObstacle()){
             buggycontrol(Buggy_Stop);
             i--;
+            
           }else{
             buggycontrol(Buggy_FollowLine);
           }
+          
           delay(100);
         }
+        
         buggycontrol(Buggy_Stop);
         desiredMode = Buggy_Stop;
+        
         ignoreIR = false;
         
         send("Buggy Parked");
+        
       }else if (message == "continue right") {
         ignoreIR = true;
         
@@ -236,7 +279,7 @@ void loop() {
     gantryChange = false;
 
     delay(400);
-
+    
     desiredMode = Buggy_Stop;
     buggycontrol(Buggy_Stop);  
     
@@ -314,12 +357,11 @@ bool hasObstacle() {
   
   int s = distanceForPulseLength(dt);
   
-  return dt <= 500;
+  return dt <= 1000;
 }
 
 //Interrupt handler for IR sensors
 void IRDetected(){
-
   if(ignoreIR || gantryChange){
     if (DEBUGIR) {
       send("IR ignored");
@@ -336,7 +378,16 @@ void IRDetected(){
   }
   
   int newGantry = gantryForPulseLength(t);
-  if( gantry != 0&& gantry == newGantry ){
+  
+  if (newGantry == 0) {
+    if (DEBUGIR) {
+      send("Ignored invalid pulse length");
+    }
+    
+    return;
+  }
+  
+  if (gantry == newGantry) {
     if(DEBUGIR){
       send("Found Gantry again"); 
     }
@@ -359,10 +410,6 @@ int gantryForPulseLength(int t){
   }else if(t >=2500 && t < 3500){
     return 3;
   }else{
-    if (DEBUGIR) {
-      send("Invalid pulse length");
-    }
-    
     return 0;
   }
 }
