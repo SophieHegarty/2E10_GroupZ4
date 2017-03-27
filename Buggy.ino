@@ -94,7 +94,8 @@ void loop() {
   if (messageComplete) {
     message.toLowerCase();
     
-    if (message.substring(0,1).toInt() == buggyID){
+    if (message.substring(0, 1) == "x" || 
+        message.substring(0, 1).toInt() == buggyID) {
       message.remove(0,3);
       if (message == "buggy is 1") {
         buggyID = 1;
