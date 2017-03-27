@@ -37,7 +37,7 @@ namespace Buggy
             Console.Clear();
 
             port = new SerialPort();
-            port.PortName = "COM8";
+            port.PortName = "COM3";
             port.BaudRate = 9600;
             port.Open();
 
@@ -45,7 +45,7 @@ namespace Buggy
             {
                 port.Write("+++");
                 Thread.Sleep(1100);
-                port.WriteLine("ATID 1234, CH C, CN");
+                port.WriteLine("ATID 3304, CH C, CN");
 
                 const double duration = 9;
                 const double T = 0.25;
@@ -113,17 +113,29 @@ namespace Buggy
                 else if (outmessage == "Start Silver")
                 {
                     mode = OperationMode.Silver;
+
+                    track.setSectionForBuggy(0, 4);
+                    track.setOrientationOfBuggy(0, BuggyOrientation.Clockwise);
+                    track.setSectionForBuggy(1, 4);
+                    track.setOrientationOfBuggy(1, BuggyOrientation.CounterClockwise);
+
                     send(1, "Run");
                 }
                 else if (outmessage == "Start Gold")
                 {
                     Console.Write("Number of Rounds: ");
-                    String nstr = Console.ReadLine();
+                    String nstr = Console.ReadLine(); 
                     int n = 0;
                     if (Int32.TryParse(nstr, out n) && n > 0)
                     {
                         mode = OperationMode.Gold;
                         goldtarget = n;
+
+                        track.setSectionForBuggy(0, 4);
+                        track.setOrientationOfBuggy(0, BuggyOrientation.Clockwise);
+                        track.setSectionForBuggy(1, 4);
+                        track.setOrientationOfBuggy(1, BuggyOrientation.CounterClockwise);
+
                         send(1, "Run");
                     }
                     else
@@ -173,7 +185,7 @@ namespace Buggy
             {
                 BuggyMovement movement = track.getMovementOfBuggy(buggy - 1);
                 double speed = track.getSpeedOfBuggy(buggy - 1);
-                
+
                 if (movement == BuggyMovement.Stopped)
                 {
                     send(buggy, "stop");
@@ -194,11 +206,11 @@ namespace Buggy
                 {
                     send(buggy, "rotate left");
                 }
-                
+
                 send(buggy, "full power");
                 for (int i = 0; i < (1.0 - speed) / 0.1; i++)
                     send(buggy, "reduce power");
-                
+
             }
             else if (inmessage == "buggy id set to 1")
             {
@@ -281,7 +293,7 @@ namespace Buggy
                     {
                         Console.WriteLine("Gold challenge complete!");
                     }
-                    else if(buggy == 2)
+                    else if (buggy == 2)
                     {
                         send(1, "leave gantry");
                     }
@@ -341,11 +353,7 @@ namespace Buggy
                         }
                         else if (gantry == 3)
                         {
-                            if (track.getSectionForBuggy(1) == 3
-                                && track.getMovementOfBuggy(1) == BuggyMovement.Stopped)
-                            {
-                                send(2, "run");
-                            }
+                            send(2, "run");
                         }
                     }
                     else if (buggy == 2)
@@ -384,6 +392,7 @@ namespace Buggy
                         else if (gantry == 2)
                         {
                             buggy1rounds++;
+                            Console.WriteLine("Buggy 1 completed round " + buggy1rounds);
                             if (buggy1rounds < goldtarget)
                             {
                                 Thread.Sleep(500);
@@ -397,11 +406,7 @@ namespace Buggy
                         }
                         else if (gantry == 3)
                         {
-                            if (track.getSectionForBuggy(1) == 3
-                                && track.getMovementOfBuggy(1) == BuggyMovement.Stopped)
-                            {
-                                send(2, "run");
-                            }
+                            send(2, "run");
                         }
                     }
                     else if (buggy == 2)
