@@ -61,11 +61,11 @@ namespace Buggy
             {
                 new Buggy() {orientation = BuggyOrientation.Clockwise,
                                 movement = BuggyMovement.Stopped,
-                                   speed = 0.5,
+                                   speed = 1.0,
                                 obstacle = false},
                 new Buggy() {orientation = BuggyOrientation.Clockwise,
                                 movement = BuggyMovement.Stopped,
-                                   speed = 0.5,
+                                   speed = 1.0,
                                 obstacle = false}
 
             };
