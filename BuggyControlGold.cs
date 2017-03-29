@@ -37,7 +37,7 @@ namespace Buggy
             Console.Clear();
 
             port = new SerialPort();
-            port.PortName = "COM3";
+            port.PortName = "COM5";
             port.BaudRate = 9600;
             port.Open();
 
@@ -172,7 +172,7 @@ namespace Buggy
             Console.WriteLine();
             Console.WriteLine(inmessage);
 
-            if ('0' > inmessage[0] || '9' < inmessage[0])
+            if (inmessage.Length == 0 || '0' > inmessage[0] || '9' < inmessage[0])
             {
                 Console.Write(">");
                 return;
@@ -185,6 +185,8 @@ namespace Buggy
             {
                 BuggyMovement movement = track.getMovementOfBuggy(buggy - 1);
                 double speed = track.getSpeedOfBuggy(buggy - 1);
+
+                Thread.Sleep(500);
 
                 if (movement == BuggyMovement.Stopped)
                 {
@@ -207,10 +209,15 @@ namespace Buggy
                     send(buggy, "rotate left");
                 }
 
+                Thread.Sleep(100);
+
                 send(buggy, "full power");
                 for (int i = 0; i < (1.0 - speed) / 0.1; i++)
+                {
+                    Thread.Sleep(100);
                     send(buggy, "reduce power");
-
+                }
+                   
             }
             else if (inmessage == "buggy id set to 1")
             {
@@ -264,11 +271,13 @@ namespace Buggy
             }
             else if (inmessage == "passed gantry")
             {
+                track.setMovementOfBuggy(buggy - 1, BuggyMovement.FollowingLine);
                 track.setSectionForBuggy(buggy - 1, track.getNextSectionForBuggy(buggy - 1, false));
                 printTrack();
             }
             else if (inmessage == "buggy parked")
             {
+                track.setMovementOfBuggy(buggy - 1, BuggyMovement.Stopped);
                 track.setSectionForBuggy(buggy - 1, track.getNextSectionForBuggy(buggy - 1, true));
                 printTrack();
 
@@ -295,6 +304,7 @@ namespace Buggy
                     }
                     else if (buggy == 2)
                     {
+                        Thread.Sleep(500);
                         send(1, "leave gantry");
                     }
                 }
@@ -303,6 +313,7 @@ namespace Buggy
             else if (inmessage.StartsWith("detected gantry"))
             {
                 int gantry = Int32.Parse(inmessage.Substring(16));
+                track.setMovementOfBuggy(buggy - 1, BuggyMovement.Stopped);
                 track.setGantryForBuggy(buggy - 1, gantry - 1);
                 printTrack();
 
@@ -353,6 +364,7 @@ namespace Buggy
                         }
                         else if (gantry == 3)
                         {
+                            Thread.Sleep(500);
                             send(2, "run");
                         }
                     }
@@ -406,6 +418,7 @@ namespace Buggy
                         }
                         else if (gantry == 3)
                         {
+                            Thread.Sleep(500);
                             send(2, "run");
                         }
                     }
