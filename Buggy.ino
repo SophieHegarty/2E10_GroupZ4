@@ -32,7 +32,6 @@
 //DEBUGUS controls verbose output of Ultra Sonic related messages
 
 //States:
-bool sentStartupMessage;
 int buggyID;
 int desiredMode;
 String message;
@@ -75,8 +74,7 @@ void setup() {
   }
   
   while(Serial.read() != -1) {};
-
-  sentStartupMessage = false;
+  
   buggyID = 1;
   desiredMode = Buggy_Stop;
   message = "";
@@ -92,185 +90,174 @@ void setup() {
   if (DEBUG) {
     send("Setup done");
   }
+
+  delay(10000);
+  send("Buggy turned on");
 }
 
 void loop() {
-  if (sentStartupMessage == false) {
-    send("Buggy turned on");
-    
-    sentStartupMessage = true;
-  }
-  
   if (messageComplete) {
     message.toLowerCase();
-
-    //Each buggy has an ID stored in buggyID
-    //A buggy respons to messages to "X" or to its ID
-    //For example:  X: stop   [Stops all buggies]
-    //Or:           2: run    [Tells buggy 2 to run]
-    if (message.substring(0, 1) == "x" || 
-        message.substring(0, 1).toInt() == buggyID) {
-      message.remove(0,3);
+    
+    if (message == "buggy is 1") {
+      buggyID = 1;
       
-      if (message == "buggy is 1") {
-        buggyID = 1;
-        
-        send("Buggy ID set to 1");
-        
-      }else if (message == "buggy is 2") {
-         buggyID = 2;
-         
-         send("Buggy ID set to 2");
-         
-      }else if (message == "run") {
-        buggycontrol(Buggy_FollowLine);
-        desiredMode = Buggy_FollowLine;
-        
-        send("Buggy Running");
-        
-      }else if (message == "stop") {
-        buggycontrol(Buggy_Stop);
-        desiredMode = Buggy_Stop;
-        
-        send("Buggy Stopping");
-        
-      }else if(message == "leave gantry"){
-        ignoreIR = true;
+      send("Buggy ID set to 1");
+      
+    }else if (message == "buggy is 2") {
+       buggyID = 2;
+       
+       send("Buggy ID set to 2");
+       
+    }else if (message == "run") {
+      buggycontrol(Buggy_FollowLine);
+      desiredMode = Buggy_FollowLine;
+      
+      send("Buggy Running");
+      
+    }else if (message == "stop") {
+      buggycontrol(Buggy_Stop);
+      desiredMode = Buggy_Stop;
+      
+      send("Buggy Stopping");
+      
+    }else if(message == "leave gantry"){
+      ignoreIR = true;
 
-        desiredMode = Buggy_FollowLine;
-        buggycontrol(Buggy_FollowLine);
-        
-        delay(1000);
-        
-        ignoreIR = false;
-        
-        send("Passed gantry");
-            
-      }else if (message == "park right") {
-        ignoreIR = true;
-        
-        buggycontrol(Buggy_TurnRight);
-        
-        for(int i = 0; i < 20; i++){
-          if(hasObstacle()){
-            buggycontrol(Buggy_Stop);
-            i--;
-            
-          }else{
-            buggycontrol(Buggy_TurnRight);
-          }
+      desiredMode = Buggy_FollowLine;
+      buggycontrol(Buggy_FollowLine);
+      
+      delay(1000);
+      
+      ignoreIR = false;
+      
+      send("Passed gantry");
           
-          delay(100);
+    }else if (message == "park right") {
+      ignoreIR = true;
+      
+      buggycontrol(Buggy_TurnRight);
+      
+      for(int i = 0; i < 20; i++){
+        if(hasObstacle()){
+          buggycontrol(Buggy_Stop);
+          i--;
+          
+        }else{
+          buggycontrol(Buggy_TurnRight);
         }
         
-        buggycontrol(Buggy_FollowLine);
-        
-        for(int i = 0; i < 20; i++){
-          
-          if(hasObstacle()){
-            buggycontrol(Buggy_Stop);
-            i--;
-            
-          }else{
-            buggycontrol(Buggy_FollowLine);
-          }
-          
-          delay(100);
-        }
-        
-        buggycontrol(Buggy_Stop);
-        desiredMode = Buggy_Stop;
-        
-        ignoreIR = false;
-        
-        send("Buggy Parked");
-        
-      }else if (message == "park left") {
-        ignoreIR = true;
-        
-        buggycontrol(Buggy_TurnLeft);
-        
-        for(int i = 0; i < 20; i++){
-          if(hasObstacle()){
-            buggycontrol(Buggy_Stop);
-            i--;
-            
-          }else{
-            buggycontrol(Buggy_TurnLeft);
-          }
-          
-          delay(100);
-        }
-        
-        buggycontrol(Buggy_FollowLine);
-        
-        for(int i = 0; i < 20; i++){
-          if(hasObstacle()){
-            buggycontrol(Buggy_Stop);
-            i--;
-            
-          }else{
-            buggycontrol(Buggy_FollowLine);
-          }
-          
-          delay(100);
-        }
-        
-        buggycontrol(Buggy_Stop);
-        desiredMode = Buggy_Stop;
-        
-        ignoreIR = false;
-        
-        send("Buggy Parked");
-        
-      }else if (message == "continue right") {
-        ignoreIR = true;
-        
-        buggycontrol(Buggy_TurnRight);
-        for(int i = 0; i < 30; i++){
-          if(hasObstacle()){
-            buggycontrol(Buggy_Stop);
-            i--;
-          }else{
-            buggycontrol(Buggy_TurnRight);
-          }
-          delay(100);
-        }
-        buggycontrol(Buggy_FollowLine);
-        ignoreIR = false;
-        
-        send("Continuing right");
+        delay(100);
       }
-      else if (message == "turn right") {
-        buggycontrol(Buggy_TurnRight);
-        desiredMode = Buggy_TurnRight;
-        send("Buggy Turning Right");
-      }else if (message == "turn left") {
-        buggycontrol(Buggy_TurnLeft);
-        desiredMode = Buggy_TurnLeft;
-        send("Buggy Turning Left");
-      }else if (message == "rotate left") {
-        desiredMode = Buggy_RotateLeft;
-        buggycontrol(Buggy_RotateLeft);
-        send("Buggy Rotating Left");
-      }else if (message == "reduce power") {
-        buggycontrol(Buggy_ReducePower);
-        send("Buggy Reducing Power");
-      }else if (message == "increase power") {
-        buggycontrol(Buggy_IncreasePower);
-        send("Buggy Increasing Power");
-      }else if (message == "half power") {
-        buggycontrol(Buggy_HalfPower);
-        send("Buggy Half Power");
-      }else if (message == "full power") {
-        buggycontrol(Buggy_FullPower);
-        send("Buggy Full Power");
-      }else if (message == "test") {
-        send("Working");
-      }else{
-        send("Invalid message: " + message);
+      
+      buggycontrol(Buggy_FollowLine);
+      
+      for(int i = 0; i < 20; i++){
+        
+        if(hasObstacle()){
+          buggycontrol(Buggy_Stop);
+          i--;
+          
+        }else{
+          buggycontrol(Buggy_FollowLine);
+        }
+        
+        delay(100);
       }
+      
+      buggycontrol(Buggy_Stop);
+      desiredMode = Buggy_Stop;
+      
+      ignoreIR = false;
+      
+      send("Buggy Parked");
+      
+    }else if (message == "park left") {
+      ignoreIR = true;
+      
+      buggycontrol(Buggy_TurnLeft);
+      
+      for(int i = 0; i < 20; i++){
+        if(hasObstacle()){
+          buggycontrol(Buggy_Stop);
+          i--;
+          
+        }else{
+          buggycontrol(Buggy_TurnLeft);
+        }
+        
+        delay(100);
+      }
+      
+      buggycontrol(Buggy_FollowLine);
+      
+      for(int i = 0; i < 20; i++){
+        if(hasObstacle()){
+          buggycontrol(Buggy_Stop);
+          i--;
+          
+        }else{
+          buggycontrol(Buggy_FollowLine);
+        }
+        
+        delay(100);
+      }
+      
+      buggycontrol(Buggy_Stop);
+      desiredMode = Buggy_Stop;
+      
+      ignoreIR = false;
+      
+      send("Buggy Parked");
+      
+    }else if (message == "continue right") {
+      ignoreIR = true;
+      
+      buggycontrol(Buggy_TurnRight);
+      for(int i = 0; i < 30; i++){
+        if(hasObstacle()){
+          buggycontrol(Buggy_Stop);
+          i--;
+        }else{
+          buggycontrol(Buggy_TurnRight);
+        }
+        delay(100);
+      }
+      buggycontrol(Buggy_FollowLine);
+      ignoreIR = false;
+      
+      send("Continuing right");
     }
+    else if (message == "turn right") {
+      buggycontrol(Buggy_TurnRight);
+      desiredMode = Buggy_TurnRight;
+      send("Buggy Turning Right");
+    }else if (message == "turn left") {
+      buggycontrol(Buggy_TurnLeft);
+      desiredMode = Buggy_TurnLeft;
+      send("Buggy Turning Left");
+    }else if (message == "rotate left") {
+      desiredMode = Buggy_RotateLeft;
+      buggycontrol(Buggy_RotateLeft);
+      send("Buggy Rotating Left");
+    }else if (message == "reduce power") {
+      buggycontrol(Buggy_ReducePower);
+      send("Buggy Reducing Power");
+    }else if (message == "increase power") {
+      buggycontrol(Buggy_IncreasePower);
+      send("Buggy Increasing Power");
+    }else if (message == "half power") {
+      buggycontrol(Buggy_HalfPower);
+      send("Buggy Half Power");
+    }else if (message == "full power") {
+      buggycontrol(Buggy_FullPower);
+      send("Buggy Full Power");
+    }else if (message == "test") {
+      send("Working");
+    }else{
+      send("Invalid message: " + message);
+    }
+    
     message = "";
     messageComplete = false;
   }
@@ -321,6 +308,19 @@ void serialEvent(){
       message += c;
     }else{
       messageComplete = true;
+      
+      //Each buggy has an ID stored in buggyID
+      //A buggy respons to messages to "X" or to its ID
+      //For example:  X: stop   [Stops all buggies]
+      //Or:           2: run    [Tells buggy 2 to run]
+      if (message.substring(0, 1) == "X" || 
+          message.substring(0, 1) == "x" || 
+          message.substring(0, 1).toInt() == buggyID) {
+        message.remove(0,3);
+      }else{
+        message = "";
+        messageComplete = false;
+      }
     }
   }
 }
